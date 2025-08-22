@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Set proxy target</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            padding: 24px;
+            max-width: 760px;
+            margin: auto;
+            color: #111;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 14px;
+            font-size: 1rem;
+        }
+
+        .history {
+            margin-top: 18px;
+            background: #f7f7f8;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .note {
+            color: #6b7280;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Set proxy target for your IP</h1>
+    <p>Enter the URL you want your requests to be proxied to (for this IP address).</p>
+
+    <form id="setForm">
+        <label>
+            Target URL:
+            <input type="text" name="url" id="url" placeholder="https://example.com:8080 or example.com" required />
+        </label>
+        <div style="margin-top:8px;">
+            <button type="submit">Set target</button>
+        </div>
+    </form>
+
+    <p class="note">After setting, you'll be redirected to the <em>pathname</em> of that URL (as requested).</p>
+
+    <div class="history" id="historyBox">
+        <strong>Your saved entry</strong>
+        <pre id="historyJson">(loading...)</pre>
+    </div>
+
+    <script>
+        async function refreshHistory() {
+            try {
+                const resp = await fetch('/mw/vpn/api/history');
+                const json = await resp.json();
+                document.getElementById('historyJson').textContent = JSON.stringify(json, null, 2);
+            } catch (e) {
+                document.getElementById('historyJson').textContent = 'Error fetching history: ' + e;
+            }
+        }
+
+        document.getElementById('setForm').addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            const form = ev.currentTarget;
+            const data = new URLSearchParams(new FormData(form));
+            try {
+                const res = await fetch('/mw/vpn/api/set', { method: 'POST', body: data });
+                // server responds with a 302 redirect to pathname; follow the redirect manually
+                if (res.redirected) {
+                    window.location = res.url;
+                    return;
+                }
+                // If not redirected (some browsers won't allow), attempt to parse Location header
+                const location = res.headers.get('Location');
+                if (location) {
+                    window.location = location;
+                    return;
+                }
+                // fallback - refresh page and history
+                await refreshHistory();
+                alert('Target set (no redirect returned)');
+            } catch (err) {
+                alert('Error: ' + err);
+            }
+        });
+
+        // initial load
+        refreshHistory();
+    </script>
+</body>
+
+</html>
