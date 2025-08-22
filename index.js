@@ -1,4 +1,4 @@
-// index.js (ESM) — simple per-IP proxy with UI at /proxy/api/change-page
+// index.js (ESM) — simple per-IP proxy with UI at /setip
 // Run with Node >=18 and package.json { "type": "module" }
 import { createServer } from "http";
 import http from "http";
@@ -61,7 +61,7 @@ const server = createServer(async (req, res) => {
         const origin = origins.get(ip);
 
         // Route: UI page
-        if (req.url === "/proxy/api/change-page") {
+        if (req.url === "/setip") {
             if (origin) {
                 // if origin already set, redirect to its pathname+search (user asked for this)
                 try {
@@ -105,7 +105,7 @@ const server = createServer(async (req, res) => {
 
         // If origin is missing, redirect to change-page (except the set endpoint handled above)
         if (!origin) {
-            res.writeHead(302, { Location: "/proxy/api/change-page" });
+            res.writeHead(302, { Location: "/setip" });
             return res.end();
         }
 
@@ -176,7 +176,7 @@ server.on("connect", (req, clientSocket, head) => {
     // Allow CONNECT only if client has an origin set (so unregistered users are still redirected)
     const ip = normalizeIp(clientSocket.remoteAddress);
     if (!origins.has(ip)) {
-        clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /proxy/api/change-page\r\n\r\n");
+        clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /setip\r\n\r\n");
         return clientSocket.end();
     }
 
@@ -205,7 +205,7 @@ server.on("upgrade", (req, clientSocket, head) => {
         const ip = normalizeIp(req.socket.remoteAddress);
         const origin = origins.get(ip);
         if (!origin) {
-            clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /proxy/api/change-page\r\n\r\n");
+            clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /setip\r\n\r\n");
             return clientSocket.end();
         }
 
