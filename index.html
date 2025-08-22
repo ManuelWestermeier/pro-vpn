@@ -74,7 +74,7 @@
             align-items: center;
         }
 
-        input[type="text"] {
+        input {
             flex: 1;
             background: var(--glass);
             border: 1px solid rgba(255, 255, 255, 0.03);
@@ -85,7 +85,7 @@
             outline: none;
         }
 
-        input[type="text"]::placeholder {
+        input::placeholder {
             color: #94a3b8;
         }
 
@@ -247,7 +247,7 @@
             </header>
 
             <form id="setForm" autocomplete="off">
-                <input id="urlInput" name="url" type="text" placeholder="https://example.com:8080 or example.com"
+                <input id="urlInput" name="url" type="url" placeholder="https://example.com:8080 or example.com"
                     required />
                 <button class="primary" type="submit">Set target</button>
             </form>
