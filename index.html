@@ -4,102 +4,502 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Set proxy target</title>
+    <title>Proxy Target — Set & History</title>
     <style>
+        :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --accent: #7c3aed;
+            --muted: #9aa4b2;
+            --glass: rgba(255, 255, 255, 0.04);
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
         body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-            padding: 24px;
-            max-width: 760px;
-            margin: auto;
-            color: #111;
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background:
+                radial-gradient(800px 400px at 10% 10%, rgba(124, 58, 237, 0.12), transparent 6%),
+                linear-gradient(180deg, #071024 0%, #071426 40%, #04101a 100%);
+            color: #e6eef8;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: -0.2px;
+        }
+
+        header p {
+            margin: 6px 0 14px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         input[type="text"] {
+            flex: 1;
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: inherit;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input[type="text"]::placeholder {
+            color: #94a3b8;
+        }
+
+        button.primary {
+            background: linear-gradient(180deg, var(--accent), #5b21b6);
+            border: none;
+            padding: 11px 14px;
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(124, 58, 237, 0.14), inset 0 -2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        button.ghost {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* History column */
+        .history-header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .search {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .search input {
             width: 100%;
-            padding: 10px;
-            font-size: 1rem;
-            margin-bottom: 8px;
-            box-sizing: border-box;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: inherit;
+            outline: none;
         }
 
-        button {
-            padding: 10px 14px;
-            font-size: 1rem;
+        .list {
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 560px;
+            overflow: auto;
+            padding-right: 6px;
         }
 
-        .history {
-            margin-top: 18px;
-            background: #f7f7f8;
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             padding: 12px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
+        }
+
+        .favicon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .meta .url {
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .meta .sm {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .controls button {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 8px;
             border-radius: 8px;
         }
 
-        .note {
-            color: #6b7280;
-            margin-top: 8px;
+        .controls button.visit {
+            background: linear-gradient(90deg, rgba(124, 58, 237, 0.14), rgba(91, 33, 182, 0.14));
+            color: #eaf0ff;
+            border: none;
+            padding: 8px 10px;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px 18px;
+            color: var(--muted);
+        }
+
+        footer.note {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 960px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 0 12px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Set proxy target for your IP</h1>
-    <p>Enter the URL you want your requests to be proxied to (for this IP address).</p>
+    <div class="container">
+        <div class="card">
+            <header>
+                <h1>Proxy Target</h1>
+                <p>Set where requests from your IP should be proxied. History is stored in your browser (localStorage).
+                </p>
+            </header>
 
-    <form id="setForm">
-        <label>
-            Target URL:
-            <input type="text" name="url" id="url" placeholder="https://example.com:8080 or example.com" required />
-        </label>
-        <div style="margin-top:8px;">
-            <button type="submit">Set target</button>
+            <form id="setForm" autocomplete="off">
+                <input id="urlInput" name="url" type="text" placeholder="https://example.com:8080 or example.com"
+                    required />
+                <button class="primary" type="submit">Set target</button>
+            </form>
+
+            <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+                <button id="clearAll" class="ghost" title="Clear all history">Clear all</button>
+                <div style="flex:1"></div>
+                <div style="color:var(--muted); font-size:13px">Max 50 entries · Stored locally</div>
+            </div>
+
+            <footer class="note">
+                After setting the target you'll be redirected to the target's pathname (so the proxy will start serving
+                that path).
+            </footer>
         </div>
-    </form>
 
-    <p class="note">After setting, you'll be redirected to the <em>pathname</em> of that URL (as requested).</p>
+        <div class="card">
+            <div class="history-header">
+                <div style="display:flex; flex-direction:column;">
+                    <strong style="font-size:16px">History</strong>
+                    <span style="color:var(--muted); font-size:13px">Search, visit, or remove items</span>
+                </div>
 
-    <div class="history" id="historyBox">
-        <strong>Your saved entry</strong>
-        <pre id="historyJson">(loading...)</pre>
+                <div class="search">
+                    <input id="searchInput" type="text" placeholder="Search history..." />
+                    <button id="refreshBtn" class="ghost" title="Refresh list">⟳</button>
+                </div>
+            </div>
+
+            <div class="list" id="list"></div>
+
+            <div id="empty" class="empty" style="display:none;">
+                No history yet — set a target or visit a URL to add it here.
+            </div>
+        </div>
     </div>
 
     <script>
-        async function refreshHistory() {
-            try {
-                const resp = await fetch('/mw/vpn/api/history');
-                const json = await resp.json();
-                document.getElementById('historyJson').textContent = JSON.stringify(json, null, 2);
-            } catch (e) {
-                document.getElementById('historyJson').textContent = 'Error fetching history: ' + e;
-            }
-        }
+        (() => {
+            const STORAGE_KEY = 'mw_proxy_history_v1';
+            const MAX = 50;
 
-        document.getElementById('setForm').addEventListener('submit', async (ev) => {
-            ev.preventDefault();
-            const form = ev.currentTarget;
-            const data = new URLSearchParams(new FormData(form));
-            try {
-                const res = await fetch('/mw/vpn/api/set', { method: 'POST', body: data });
-                // server responds with a 302 redirect to pathname; follow the redirect manually
-                if (res.redirected) {
-                    window.location = res.url;
-                    return;
-                }
-                // If not redirected (some browsers won't allow), attempt to parse Location header
-                const location = res.headers.get('Location');
-                if (location) {
-                    window.location = location;
-                    return;
-                }
-                // fallback - refresh page and history
-                await refreshHistory();
-                alert('Target set (no redirect returned)');
-            } catch (err) {
-                alert('Error: ' + err);
-            }
-        });
+            function nowISO() { return new Date().toISOString(); }
 
-        // initial load
-        refreshHistory();
+            function loadHistory() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return [];
+                    return JSON.parse(raw);
+                } catch (e) {
+                    console.error('loadHistory', e);
+                    return [];
+                }
+            }
+
+            function saveHistory(list) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+                } catch (e) {
+                    console.error('saveHistory', e);
+                }
+            }
+
+            function normalizeUrl(url) {
+                try {
+                    // add scheme if missing
+                    if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)) url = 'http://' + url;
+                    const u = new URL(url);
+                    // Normalize standard ports (strip default ports)
+                    if ((u.protocol === 'http:' && u.port === '80') || (u.protocol === 'https:' && u.port === '443')) u.port = '';
+                    return u.href;
+                } catch (e) {
+                    return url;
+                }
+            }
+
+            function addToHistory(fullUrl) {
+                if (!fullUrl) return;
+                const href = normalizeUrl(fullUrl);
+                const list = loadHistory();
+                // dedupe by origin+pathname+search (full href)
+                const existingIndex = list.findIndex(x => x.url === href);
+                if (existingIndex !== -1) {
+                    const existing = list.splice(existingIndex, 1)[0];
+                    existing.lastVisited = nowISO();
+                    existing.visits = (existing.visits || 0) + 1;
+                    list.unshift(existing);
+                } else {
+                    list.unshift({ url: href, addedAt: nowISO(), lastVisited: nowISO(), visits: 1 });
+                }
+                if (list.length > MAX) list.length = MAX;
+                saveHistory(list);
+                renderList();
+            }
+
+            function deleteItem(url) {
+                const list = loadHistory().filter(x => x.url !== url);
+                saveHistory(list);
+                renderList();
+            }
+
+            function clearAll() {
+                if (!confirm('Clear all saved history?')) return;
+                localStorage.removeItem(STORAGE_KEY);
+                renderList();
+            }
+
+            function formatSmall(iso) {
+                try {
+                    const d = new Date(iso);
+                    return d.toLocaleString();
+                } catch { return iso; }
+            }
+
+            function getFaviconText(url) {
+                try {
+                    const u = new URL(url);
+                    return (u.hostname.split('.').slice(-2, -1)[0] || u.hostname[0] || '').toUpperCase();
+                } catch { return '?'; }
+            }
+
+            // Render with filter from search
+            function renderList() {
+                const el = document.getElementById('list');
+                const empty = document.getElementById('empty');
+                const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+                let list = loadHistory();
+                if (q) {
+                    list = list.filter(it => it.url.toLowerCase().includes(q));
+                }
+                el.innerHTML = '';
+                if (!list.length) {
+                    empty.style.display = '';
+                    return;
+                } else {
+                    empty.style.display = 'none';
+                }
+
+                for (const item of list) {
+                    const row = document.createElement('div');
+                    row.className = 'item';
+
+                    const fav = document.createElement('div');
+                    fav.className = 'favicon';
+                    fav.title = item.url;
+                    fav.textContent = getFaviconText(item.url);
+
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    const urlLine = document.createElement('div');
+                    urlLine.className = 'url';
+                    urlLine.textContent = item.url;
+                    const sm = document.createElement('div');
+                    sm.className = 'sm';
+                    sm.textContent = `added ${formatSmall(item.addedAt)} • visits ${item.visits || 0} • last ${formatSmall(item.lastVisited)}`;
+
+                    meta.appendChild(urlLine);
+                    meta.appendChild(sm);
+
+                    const controls = document.createElement('div');
+                    controls.className = 'controls';
+
+                    const visitBtn = document.createElement('button');
+                    visitBtn.className = 'visit';
+                    visitBtn.textContent = 'Visit';
+                    visitBtn.title = 'Set this URL as target and visit (adds to history)';
+                    visitBtn.onclick = async () => {
+                        // set target on server
+                        try {
+                            const body = new URLSearchParams();
+                            body.set('url', item.url);
+                            // Do POST to register mapping on server
+                            await fetch('/mw/vpn/api/set', { method: 'POST', body: body });
+                        } catch (e) {
+                            console.warn('visit: set failed (server might be unreachable). Proceeding to navigate anyway.');
+                        }
+                        // add to history (it will bump to top)
+                        addToHistory(item.url);
+                        // navigate to the pathname of the target so proxying takes effect
+                        try {
+                            const u = new URL(item.url);
+                            const targetPath = u.pathname + u.search || '/';
+                            window.location.href = targetPath;
+                        } catch (e) {
+                            // fallback: navigate to root
+                            window.location.href = '/';
+                        }
+                    };
+
+                    const delBtn = document.createElement('button');
+                    delBtn.title = 'Delete';
+                    delBtn.innerHTML = '&#x2716;';
+                    delBtn.onclick = () => deleteItem(item.url);
+
+                    controls.appendChild(visitBtn);
+                    controls.appendChild(delBtn);
+
+                    row.appendChild(fav);
+                    row.appendChild(meta);
+                    row.appendChild(controls);
+                    el.appendChild(row);
+                }
+            }
+
+            // Form handling: set target and add to local history, then navigate to pathname
+            document.getElementById('setForm').addEventListener('submit', async (ev) => {
+                ev.preventDefault();
+                const url = document.getElementById('urlInput').value.trim();
+                if (!url) return;
+                const normalized = (function (u) {
+                    try {
+                        if (!/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(u)) u = 'http://' + u;
+                        return new URL(u).href;
+                    } catch { return u; }
+                })(url);
+
+                // Add to local history first
+                addToHistory(normalized);
+
+                // Tell server to register mapping
+                try {
+                    const body = new URLSearchParams();
+                    body.set('url', normalized);
+                    // we don't rely on the server redirect here; we compute pathname and navigate manually
+                    await fetch('/mw/vpn/api/set', { method: 'POST', body });
+                } catch (err) {
+                    console.warn('Failed to set on server (continuing navigation):', err);
+                }
+
+                try {
+                    const u = new URL(normalized);
+                    const targetPath = u.pathname + u.search || '/';
+                    // Navigate to the path on our proxy so proxying will occur
+                    window.location.href = targetPath;
+                } catch (e) {
+                    window.location.href = '/';
+                }
+            });
+
+            document.getElementById('searchInput').addEventListener('input', () => renderList());
+            document.getElementById('refreshBtn').addEventListener('click', () => renderList());
+            document.getElementById('clearAll').addEventListener('click', clearAll);
+
+            // Initial render
+            renderList();
+
+            // If the user navigated *from* the UI to a proxied path (meaning they visited a target),
+            // we already added history on the click that performed the navigation.
+            // If you want to also detect visits that happen outside this UI (rare), we could inspect
+            // document.referrer or add query param handling to add entries. For now, visits via this UI
+            // will be recorded automatically.
+        })();
     </script>
 </body>
 
