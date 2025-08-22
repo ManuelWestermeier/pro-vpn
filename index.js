@@ -1,5 +1,3 @@
-// index.js (ESM) — simple per-IP proxy with UI at /+s
-// Run with Node >=18 and package.json { "type": "module" }
 import { createServer } from "http";
 import http from "http";
 import https from "https";
@@ -245,7 +243,7 @@ server.on("upgrade", (req, clientSocket, head) => {
     }
 });
 
-const PORT = 80;
+const PORT = process.env.PORN || 80;
 server.listen(PORT, () => {
     console.log(`Proxy server listening on :${PORT}`);
 });
