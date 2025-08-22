@@ -1,4 +1,4 @@
-// index.js (ESM) — simple per-IP proxy with UI at /setip
+// index.js (ESM) — simple per-IP proxy with UI at /+s
 // Run with Node >=18 and package.json { "type": "module" }
 import { createServer } from "http";
 import http from "http";
@@ -61,24 +61,17 @@ const server = createServer(async (req, res) => {
         const origin = origins.get(ip);
 
         // Route: UI page
-        if (req.url === "/setip") {
-            if (origin) {
-                // if origin already set, redirect to its pathname+search (user asked for this)
-                try {
-                    const u = new URL(origin);
-                    const redirectPath = (u.pathname || "/") + (u.search || "");
-                    res.writeHead(302, { Location: redirectPath || "/" });
-                    return res.end();
-                } catch (e) {
-                    // fall through and show UI if origin malformed
-                }
-            }
+        if (req.url === "/+s") {
             res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
             return res.end(INDEX_HTML);
         }
 
+        if (req.url == "/+proxy/api/get") {
+            res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+            return res.end(origin || "null");
+        }
         // Route: set new origin for this IP (server-side)
-        if (req.url === "/proxy/api/set" && req.method === "POST") {
+        if (req.url === "/+proxy/api/set" && req.method === "POST") {
             const body = await parseForm(req);
             let raw = (body.url || "").trim();
             if (!raw) {
@@ -105,7 +98,7 @@ const server = createServer(async (req, res) => {
 
         // If origin is missing, redirect to change-page (except the set endpoint handled above)
         if (!origin) {
-            res.writeHead(302, { Location: "/setip" });
+            res.writeHead(302, { Location: "/+s" });
             return res.end();
         }
 
@@ -176,7 +169,7 @@ server.on("connect", (req, clientSocket, head) => {
     // Allow CONNECT only if client has an origin set (so unregistered users are still redirected)
     const ip = normalizeIp(clientSocket.remoteAddress);
     if (!origins.has(ip)) {
-        clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /setip\r\n\r\n");
+        clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /+s\r\n\r\n");
         return clientSocket.end();
     }
 
@@ -205,7 +198,7 @@ server.on("upgrade", (req, clientSocket, head) => {
         const ip = normalizeIp(req.socket.remoteAddress);
         const origin = origins.get(ip);
         if (!origin) {
-            clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /setip\r\n\r\n");
+            clientSocket.write("HTTP/1.1 302 Found\r\nLocation: /+s\r\n\r\n");
             return clientSocket.end();
         }
 

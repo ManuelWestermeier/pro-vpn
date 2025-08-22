@@ -212,6 +212,15 @@
                 justify-content: flex-end
             }
         }
+
+        #domain {
+            color: #eee;
+            text-decoration: none;
+        }
+
+        header {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
@@ -221,6 +230,7 @@
             <h1>Set proxy target</h1>
             <p>Enter the origin (domain or full URL) you want your requests proxied to. Afterwards you'll be redirected
                 to that origin's path so proxying begins.</p>
+            <a id="domain" href="">Current Domain: </a>
         </header>
 
         <form id="setForm" autocomplete="off">
@@ -247,6 +257,8 @@
 
     <script>
         (function () {
+            fetch("/+proxy/api/get").then(async url => url.text().then(u => u == "null" ? "" : (document.getElementById("domain").innerText += "\n" + u) > (document.getElementById("urlInput").value = u)));
+
             const STORAGE_KEY = 'mw_proxy_history_v1';
 
             const load = () => {
@@ -321,7 +333,7 @@
                         // set server-side origin
                         try {
                             const params = new URLSearchParams(); params.set('url', item.url);
-                            await fetch('/proxy/api/set', { method: 'POST', body: params });
+                            await fetch('/+proxy/api/set', { method: 'POST', body: params });
                         } catch (e) {
                             // still navigate even if server set fails
                             console.warn('Set failed', e);
@@ -354,7 +366,7 @@
                 add(normalized);
                 try {
                     const params = new URLSearchParams(); params.set('url', normalized);
-                    await fetch('/proxy/api/set', { method: 'POST', body: params });
+                    await fetch('/+proxy/api/set', { method: 'POST', body: params });
                 } catch (e) {
                     console.warn('Server set failed', e);
                 }
